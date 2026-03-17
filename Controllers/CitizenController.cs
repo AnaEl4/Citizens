@@ -33,19 +33,30 @@ public class CitizenController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Post([FromBody] Citizen citizenToAdd)
+    public IActionResult Post([FromBody] CreateCitizenRequest citizenToAdd)
     {
         Citizen existingCitizen = _citizenList.Find(c => c.CI == citizenToAdd.CI);
 
         if (existingCitizen != null)
         {
-            return BadRequest($"Citizen with CI {citizenToAdd.CI} already exists");
+            return Ok($"Citizen with CI {citizenToAdd.CI} already exists");
         }
+        var random = new Random();
+        string bloodGroup = _bloodGroups[random.Next(_bloodGroups.Length)];
 
-        _citizenList.Add(citizenToAdd);
+        Citizen newCitizen = new Citizen
+        {
+            CI = citizenToAdd.CI,
+            FirstName = citizenToAdd.FirstName,
+            LastName = citizenToAdd.LastName,
+            BloodGroup = bloodGroup,
+            PersonalAsset = "default"
+        };
+
+        _citizenList.Add(newCitizen);
         SaveCitizensToCsv();
 
-        return Ok(citizenToAdd);
+        return Ok(newCitizen);
     }
 
     [HttpGet]
@@ -62,7 +73,7 @@ public class CitizenController : ControllerBase
 
         if (foundCitizen == null)
         {
-            return NotFound("Citizen not found");
+            return Ok($"Citizen with CI {ci} not found");
         }
 
         return Ok(foundCitizen);
@@ -76,7 +87,7 @@ public class CitizenController : ControllerBase
 
         if (citizenToUpdate == null)
         {
-            return NotFound("Citizen not found");
+            return Ok($"Citizen with CI {ci} not found");
         }
 
         citizenToUpdate.FirstName = request.FirstName;
@@ -95,7 +106,7 @@ public class CitizenController : ControllerBase
 
         if (citizenToRemove == null)
         {
-            return NotFound("Citizen not found");
+            return Ok($"Citizen with CI {ci} not found");
         }
 
         _citizenList.Remove(citizenToRemove);
@@ -104,6 +115,8 @@ public class CitizenController : ControllerBase
         return Ok("Citizen deleted successfully");
     }
 
+
+    //Funcion auxiliar para guardar en csv
     private void SaveCitizensToCsv()
     {
         List<string[]> data = _citizenList.Select(c => new string[]
@@ -117,4 +130,10 @@ public class CitizenController : ControllerBase
 
         CSVHelper.WriteCSV(_configuration["Data:Location"], data);
     }
+
+    //Funcion auxiliar para signar grupo sanguineo
+    private string[] _bloodGroups = new[]
+    {
+        "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"
+    };
 }
