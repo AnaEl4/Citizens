@@ -12,25 +12,34 @@ public class ObjectService
 
     public async Task<string> GetRandomObjectName()
     {
-        HttpResponseMessage response = await _httpClient.GetAsync("");
 
-        if (!response.IsSuccessStatusCode)
+        //Si la api funciona y se logra obtener un objeto, se devuelve el objeto sino se devuelve "objeto invalido"
+        try
         {
-            throw new Exception("Error retrieving objects from external API");
+            HttpResponseMessage response = await _httpClient.GetAsync("");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception("Error retrieving objects from external API");
+            }
+
+            string responseContent = await response.Content.ReadAsStringAsync();
+
+            List<Object>? objects = JsonConvert.DeserializeObject<List<Object>>(responseContent);
+
+            if (objects == null || objects.Count == 0)
+            {
+                throw new Exception("No objects were returned by the external API");
+            }
+
+            Random random = new Random();
+            Object randomObject = objects[random.Next(objects.Count)];
+
+            return randomObject.name;
         }
-
-        string responseContent = await response.Content.ReadAsStringAsync();
-
-        List<Object>? objects = JsonConvert.DeserializeObject<List<Object>>(responseContent);
-
-        if (objects == null || objects.Count == 0)
+        catch(Exception)
         {
-            throw new Exception("No objects were returned by the external API");
+            return "Objeto Inválido";
         }
-
-        Random random = new Random();
-        Object randomObject = objects[random.Next(objects.Count)];
-
-        return randomObject.name;
     }
 }
