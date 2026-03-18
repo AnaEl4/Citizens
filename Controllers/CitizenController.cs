@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 [ApiController]
 [Route("api/citizen")]
@@ -73,6 +74,7 @@ public class CitizenController : ControllerBase
         _citizenList.Add(newCitizen);
         SaveCitizensToCsv();
 
+        Log.Information($"New citizen created: {newCitizen.CI} - {newCitizen.FirstName} - {newCitizen.LastName} - {newCitizen.BloodGroup} - {newCitizen.PersonalAsset}");
         return Ok(newCitizen);
     }
 
@@ -94,6 +96,7 @@ public class CitizenController : ControllerBase
 
         if (foundCitizen == null)
         {
+            Log.Error($"Citizen with CI {ci} not found");
             return Ok($"Citizen with CI {ci} not found");
         }
 
@@ -110,13 +113,17 @@ public class CitizenController : ControllerBase
 
         if (citizenToUpdate == null)
         {
+            Log.Error($"Citizen to update with CI {ci} not found");
             return Ok($"Citizen with CI {ci} not found");
         }
 
         citizenToUpdate.FirstName = request.FirstName;
         citizenToUpdate.LastName = request.LastName;
 
+
         SaveCitizensToCsv();
+
+        Log.Information($"Citizen with CI: {citizenToUpdate.CI} UPDATED");
 
         return Ok(citizenToUpdate);
     }
@@ -131,12 +138,15 @@ public class CitizenController : ControllerBase
 
         if (citizenToRemove == null)
         {
+            Log.Error($"Citizen to delete with CI {ci} not found");
             return Ok($"Citizen with CI {ci} not found");
         }
 
         _citizenList.Remove(citizenToRemove);
         SaveCitizensToCsv();
-
+   
+        Log.Information($"Citizen with CI: {citizenToRemove.CI} DELETED");
+        
         return Ok("Citizen deleted successfully");
     }
 

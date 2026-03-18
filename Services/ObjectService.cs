@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Serilog;
 
 public class ObjectService
 {
@@ -16,11 +17,14 @@ public class ObjectService
         //Si la api funciona y se logra obtener un objeto, se devuelve el objeto sino se devuelve "objeto invalido"
         try
         {
+            Log.Debug("Conectando con la API externa de objetos");
             HttpResponseMessage response = await _httpClient.GetAsync("");
 
             if (!response.IsSuccessStatusCode)
             {
+                Log.Error("Error al llamar la API externa ");
                 throw new Exception("Error retrieving objects from external API");
+               
             }
 
             string responseContent = await response.Content.ReadAsStringAsync();
@@ -39,6 +43,7 @@ public class ObjectService
         }
         catch(Exception)
         {
+            Log.Warning("Asignando objeto predeterminado ante fallo de API");
             return "Objeto Inválido";
         }
     }
