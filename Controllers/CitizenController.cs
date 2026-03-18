@@ -7,10 +7,12 @@ public class CitizenController : ControllerBase
     private List<Citizen> _citizenList;
     private IConfiguration _configuration;
 
+
     public CitizenController(IConfiguration configuration)
     {
         _citizenList = new List<Citizen>();
         _configuration = configuration;
+
 
         List<string[]> data = CSVHelper.ReadCSV(_configuration["Data:Location"]);
 
@@ -32,6 +34,9 @@ public class CitizenController : ControllerBase
         }
     }
 
+    //FUNCIONES CRUD
+
+    //Create
     [HttpPost]
     public IActionResult Post([FromBody] CreateCitizenRequest citizenToAdd)
     {
@@ -41,16 +46,28 @@ public class CitizenController : ControllerBase
         {
             return Ok($"Citizen with CI {citizenToAdd.CI} already exists");
         }
-        var random = new Random();
-        string bloodGroup = _bloodGroups[random.Next(_bloodGroups.Length)];
+        
+         //LISTA DE GRUPOS SANGUINEOS
+        string[] _bloodGroups = new[]
+        {
+            "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"
+        };
+
+        //Asignar grupo sanguineo aleatorio
+        Random random = new Random();
+        string randomBloodGroup = _bloodGroups[random.Next(_bloodGroups.Length)];
+
+        //Asignar objeto aleatorio de api externa
+        ObjectService objectService = new ObjectService(_configuration);
+        string randomObjectName = objectService.GetRandomObjectName().Result;
 
         Citizen newCitizen = new Citizen
         {
             CI = citizenToAdd.CI,
             FirstName = citizenToAdd.FirstName,
             LastName = citizenToAdd.LastName,
-            BloodGroup = bloodGroup,
-            PersonalAsset = "default"
+            BloodGroup = randomBloodGroup,
+            PersonalAsset = randomObjectName
         };
 
         _citizenList.Add(newCitizen);
@@ -59,12 +76,16 @@ public class CitizenController : ControllerBase
         return Ok(newCitizen);
     }
 
+
+    //Read/Retrieve ALL
     [HttpGet]
     public IActionResult Get()
     {
         return Ok(_citizenList);
     }
 
+
+    //Read/Retrieve by CI
     [HttpGet]
     [Route("{ci}")]
     public IActionResult Get([FromRoute] int ci)
@@ -79,6 +100,8 @@ public class CitizenController : ControllerBase
         return Ok(foundCitizen);
     }
 
+
+    //Update --> by CI (only name and last name can be updated)
     [HttpPut]
     [Route("{ci}")]
     public IActionResult Put([FromRoute] int ci, [FromBody] UpdateCitizenRequest request)
@@ -98,6 +121,8 @@ public class CitizenController : ControllerBase
         return Ok(citizenToUpdate);
     }
 
+
+    //Delete --> by CI
     [HttpDelete]
     [Route("{ci}")]
     public IActionResult Delete([FromRoute] int ci)
@@ -131,9 +156,5 @@ public class CitizenController : ControllerBase
         CSVHelper.WriteCSV(_configuration["Data:Location"], data);
     }
 
-    //Funcion auxiliar para signar grupo sanguineo
-    private string[] _bloodGroups = new[]
-    {
-        "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"
-    };
+
 }
