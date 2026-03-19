@@ -43,7 +43,7 @@ public class ObjectService
         }
         catch(Exception)
         {
-            Log.Warning("Asignando objeto predeterminado ante fallo de API");
+            Log.Warning("Asignando objeto predeterminado ante fallo de API externa");
             return "Objeto Inválido";
         }
     }
